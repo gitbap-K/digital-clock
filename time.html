@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Clock</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=JetBrains+Mono:wght@200;300;400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e14;
+            --bg-secondary: #0f1419;
+            --text-primary: #e6edf3;
+            --text-secondary: #7d8590;
+            --accent: #58a6ff;
+            --accent-dim: #1f6feb;
+            --border: #21262d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(88, 166, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(88, 166, 255, 0.02) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .clock-container {
+            position: relative;
+            z-index: 1;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .time-display {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(80px, 15vw, 160px);
+            font-weight: 200;
+            letter-spacing: -0.02em;
+            line-height: 1;
+            color: var(--text-primary);
+            text-shadow: 0 0 40px rgba(88, 166, 255, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .period {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: clamp(24px, 4vw, 36px);
+            font-weight: 300;
+            color: var(--text-secondary);
+            margin-left: 8px;
+            letter-spacing: 0.1em;
+        }
+
+        .date-info {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .date, .day {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: clamp(14px, 2vw, 18px);
+            font-weight: 300;
+            color: var(--text-secondary);
+            letter-spacing: 0.05em;
+            transition: color 0.3s ease;
+        }
+
+        .date {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .date-separator {
+            width: 4px;
+            height: 4px;
+            background: var(--accent-dim);
+            border-radius: 50%;
+            opacity: 0.5;
+        }
+
+        .day {
+            color: var(--accent);
+            font-weight: 400;
+        }
+
+        /* Subtle pulse animation on seconds change */
+        .time.pulse {
+            transform: scale(1.002);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .clock-container {
+                padding: 0 24px;
+            }
+            
+            .time-display {
+                gap: 4px;
+            }
+            
+            .date-info {
+                gap: 8px;
+                padding-top: 16px;
+            }
+        }
+
+        /* Accessibility: Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="clock-container">
+        <div class="time-display">
+            <div class="time" id="time">00:00:00</div>
+            <div class="period" id="period">AM</div>
+        </div>
+        <div class="date-info">
+            <div class="date">
+                <span id="year">2024</span>
+                <span class="date-separator"></span>
+                <span id="month">01</span>
+                <span class="date-separator"></span>
+                <span id="date">01</span>
+            </div>
+            <div class="day" id="day">MONDAY</div>
+        </div>
+    </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            
+            // Time
+            let hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            const isPM = hours >= 12;
+            
+            // Convert to 12-hour format
+            hours = hours % 12;
+            hours = hours ? hours : 12; // 0 should be 12
+            
+            // Format with leading zeros
+            const timeString = 
+                String(hours).padStart(2, '0') + ':' +
+                String(minutes).padStart(2, '0') + ':' +
+                String(seconds).padStart(2, '0');
+            
+            const timeElement = document.getElementById('time');
+            timeElement.textContent = timeString;
+            
+            // Subtle pulse effect on each second
+            timeElement.classList.add('pulse');
+            setTimeout(() => timeElement.classList.remove('pulse'), 100);
+            
+            // Period (AM/PM)
+            document.getElementById('period').textContent = isPM ? 'PM' : 'AM';
+            
+            // Date
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const date = String(now.getDate()).padStart(2, '0');
+            
+            document.getElementById('year').textContent = year;
+            document.getElementById('month').textContent = month;
+            document.getElementById('date').textContent = date;
+            
+            // Day of week
+            const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+            document.getElementById('day').textContent = days[now.getDay()];
+        }
+
+        // Update immediately
+        updateClock();
+        
+        // Update every second
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>
